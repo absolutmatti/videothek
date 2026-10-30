@@ -1,0 +1,59 @@
+name: GitHub Pages
+
+# Baut die statische Website aus den Lesezeichen und veroeffentlicht sie.
+on:
+  push:
+    branches:
+      - main
+      - arena/8cb2afbb-videothek
+    paths:
+      - "tools/**"
+      - "_Ursprungsdaten/**"
+      - "docs/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v5
+
+      - name: Python einrichten
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Website erzeugen
+        run: python3 tools/build_site.py
+
+      # Hinweis: Die Seite wird bewusst NICHT ueber configure-pages freigeschaltet.
+      # GitHub erlaubt dem Workflow-Token kein Anlegen der Pages-Site; das ist
+      # einmalig manuell noetig (Settings -> Pages -> Source: GitHub Actions).
+      # Da alle Pfade relativ sind, wird kein base_path benoetigt.
+
+      - name: Artefakt hochladen
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Veröffentlichen
+        id: deployment
+        uses: actions/deploy-pages@v5
