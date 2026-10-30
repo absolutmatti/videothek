@@ -27,23 +27,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Repository auschecken
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Python einrichten
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Website erzeugen
         run: python3 tools/build_site.py
 
-      - name: Pages konfigurieren
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
+      # Hinweis: Die Seite wird bewusst NICHT ueber configure-pages freigeschaltet.
+      # GitHub erlaubt dem Workflow-Token kein Anlegen der Pages-Site; das ist
+      # einmalig manuell noetig (Settings -> Pages -> Source: GitHub Actions).
+      # Da alle Pfade relativ sind, wird kein base_path benoetigt.
 
       - name: Artefakt hochladen
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: docs
 
@@ -56,4 +56,4 @@ jobs:
     steps:
       - name: Veröffentlichen
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
