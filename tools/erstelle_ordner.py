@@ -260,6 +260,7 @@ def write_root_readme(entries) -> None:
         "Quelldatei haben viele Links; die uebrigen Ordner enthalten oft nur "
         "1–2 Titel, in denen die Darstellerin als Co-Star auftaucht.",
         "- Quelldateien liegen unveraendert in `_Ursprungsdaten/`.",
+        "- Live: https://absolutmatti.github.io/videothek/",
         "- Website: statisch erzeugt nach `docs/` "
         "(`python3 tools/build_site.py`), lokal ansehen mit "
         "`python3 -m http.server --directory docs`.",
