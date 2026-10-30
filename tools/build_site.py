@@ -10,6 +10,9 @@ Erzeugt:
   docs/robots.txt              kein Indexieren durch Suchmaschinen
   docs/.nojekyll               Dateien unveraendert ausliefern
 
+Die Seite braucht keine Build-Tools: reines HTML/CSS/JS, kein Framework,
+kein npm, kein Jekyll (deshalb auch ``docs/.nojekyll``).
+
 Die Inhalte kommen aus derselben Quelle wie die Ordner
 (``tools/erstelle_ordner.py``), damit Website und Ordner nie auseinanderlaufen.
 
