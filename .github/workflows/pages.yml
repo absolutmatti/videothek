@@ -9,6 +9,7 @@ on:
     paths:
       - "tools/**"
       - "_Ursprungsdaten/**"
+      - "*.md"          # neue Lesezeichen-Dateien direkt im Repo-Wurzelverzeichnis
       - "docs/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:

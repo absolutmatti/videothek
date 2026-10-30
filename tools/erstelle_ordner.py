@@ -45,9 +45,6 @@ CAST_TITLE_SPLIT_RE = re.compile(r"\s+[-\u2013\u2014|]\s+")
 CAST_SPLIT_RE = re.compile(r"\s*(?:&|,|\bund\b|\band\b)\s*")
 # Darstellerinnen-Profilseiten: .../star-name/<name>/
 PROFILE_RE = re.compile(r"^https?://[^/]+/star-name/", re.IGNORECASE)
-# Kennungen, die an Slugs angehaengt werden (z. B. "-5lhbwm", "-xwfg8"):
-# 5–8 Zeichen, enthalten eine Ziffer oder hoechstens einen Vokal.
-ID_SUFFIX_RE = re.compile(r"(-[a-z0-9]{3,8})+$", re.IGNORECASE)
 # Schreibweisen, die in Slugs klein geschrieben sind
 WORD_FIX = {
     "bbc": "BBC", "bbcs": "BBC", "milf": "MILF", "milfs": "MILFs", "pov": "POV",
@@ -115,6 +112,31 @@ def split_cast(title: str) -> tuple[list[str], str]:
     return [], title
 
 
+# Kurzformen, die trotz fehlendem Vokal echte Woerter sind
+PROTECTED_PARTS = {
+    "bbc", "bbcs", "dp", "pov", "xxx", "bbw", "ts", "hd", "gb", "bdsm",
+    "vr", "bj", "hj", "atm", "atp", "nsfw", "asmr", "milf",
+}
+
+
+def looks_like_id(part: str) -> bool:
+    """Erkennt angehaengte Slugs wie "-xwfg8", "-e0q", "-ggiplk" oder "-z526".
+
+    Kriterium: 3–8 Zeichen, alphanumerisch und entweder mit Ziffer oder ohne
+    jeden vokalartigen Buchstaben (y zaehlt als Vokal, damit "sky"/"gym"
+    erhalten bleiben). Bekannte Kurzformen wie "BBC" sind geschuetzt.
+    """
+    if not 3 <= len(part) <= 8:
+        return False
+    if not part.isalnum():
+        return False
+    if part.lower() in PROTECTED_PARTS:
+        return False
+    has_digit = any(c.isdigit() for c in part)
+    has_vowel = any(c in "aeiouy" for c in part)
+    return has_digit or not has_vowel
+
+
 def title_from_url(url: str, person: str | None) -> str:
     """Baut aus einem Video-Slug einen lesbaren Titel."""
     path = url.split("?")[0].rstrip("/")
@@ -123,17 +145,12 @@ def title_from_url(url: str, person: str | None) -> str:
         prefix = slugify(person)
         if slug.startswith(prefix + "-"):
             slug = slug[len(prefix) + 1:]
-    while True:
-        candidate = ID_SUFFIX_RE.search(slug)
-        if not candidate:
-            break
-        token = candidate.group(0)[1:]
-        vowels = sum(c in "aeiou" for c in token)
-        has_digit = any(c.isdigit() for c in token)
-        looks_like_id = vowels <= 1 and (has_digit or len(token) >= 5)
-        if not looks_like_id:
-            break
-        slug = slug[: candidate.start()]
+
+    parts = [p for p in slug.split("-") if p]
+    while len(parts) > 1 and looks_like_id(parts[-1]):
+        parts.pop()
+    slug = "-".join(parts)
+
     if not slug:
         return url
     text = slug.replace("-", " ").strip()
@@ -178,12 +195,15 @@ def parse_file(path: Path, entries: "OrderedDict[str, dict]") -> None:
 
         rest = LINK_RE.sub("", line).strip()
 
-        # 2) nackte, ggf. aneinandergeklebte URLs
+        # 2) nackte, ggf. aneinandergeklebte URLs – auch in eckigen Klammern,
+        #    wie sie beim Kopieren aus dem Browser entstehen: [https://a/https://b]
         for chunk in re.split(r"(?=https?://)", rest):
-            chunk = chunk.strip()
+            chunk = chunk.strip().lstrip("[(").strip()
             if not chunk.startswith("http"):
                 continue
             url = chunk.split()[0] if chunk.split() else chunk
+            # Klammern/Anfuehrungszeichen zuerst entfernen, sonst landet "]" im Titel
+            url = url.strip().strip("<>()[]").rstrip('.,;"\'')
             add(section, title_from_url(url, section), url)
 
         # 3) Text vor der ersten URL: Name / Ueberschrift?
@@ -195,6 +215,23 @@ def parse_file(path: Path, entries: "OrderedDict[str, dict]") -> None:
         if is_person_name(label):
             register(label)
             section = label
+
+
+def source_files() -> list[Path]:
+    """Alle Lesezeichen-Quellen.
+
+    Gelesen werden ``_Ursprungsdaten/*.md`` und alle ``*.md`` direkt im
+    Projektwurzelverzeichnis (ausser ``README.md``). So kann eine neue Datei
+    einfach oben ins Repo gelegt werden.
+    """
+    seen: dict[str, Path] = {}
+    for path in sorted(SOURCE_DIR.glob("*.md")):
+        seen[path.name] = path
+    for path in sorted(ROOT.glob("*.md")):
+        if path.name.lower() == "readme.md":
+            continue
+        seen.setdefault(path.name, path)
+    return [seen[name] for name in sorted(seen)]
 
 
 def parse(sources: list[Path]) -> "OrderedDict[str, dict]":
@@ -259,7 +296,9 @@ def write_root_readme(entries) -> None:
         "- Die 40 Darstellerinnen mit eigener Ueberschrift in der ersten "
         "Quelldatei haben viele Links; die uebrigen Ordner enthalten oft nur "
         "1–2 Titel, in denen die Darstellerin als Co-Star auftaucht.",
-        "- Quelldateien liegen unveraendert in `_Ursprungsdaten/`.",
+        "- Quelldateien liegen in `_Ursprungsdaten/`; zusaetzlich wird jede "
+        "`*.md` im Wurzelverzeichnis gelesen (ausser `README.md`), damit neue "
+        "Lesezeichen einfach oben abgelegt werden koennen.",
         "- Live: https://absolutmatti.github.io/videothek/",
         "- Vorschaubilder: URLs in `data/thumbs.json` "
         "(`python3 tools/thumbnails.py`); die Bilder selbst werden nicht "
@@ -285,9 +324,9 @@ def main(argv: list[str]) -> int:
             if path.resolve() != target.resolve():
                 shutil.copyfile(path, target)
 
-    sources = sorted(SOURCE_DIR.glob("*.md"))
+    sources = source_files()
     if not sources:
-        print(f"Keine Quelldateien in {SOURCE_DIR}", file=sys.stderr)
+        print("Keine Quelldateien gefunden.", file=sys.stderr)
         return 1
 
     entries = parse(sources)
