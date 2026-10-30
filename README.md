@@ -201,5 +201,6 @@
 - Die 40 Darstellerinnen mit eigener Ueberschrift in der ersten Quelldatei haben viele Links; die uebrigen Ordner enthalten oft nur 1–2 Titel, in denen die Darstellerin als Co-Star auftaucht.
 - Quelldateien liegen unveraendert in `_Ursprungsdaten/`.
 - Live: https://absolutmatti.github.io/videothek/
+- Vorschaubilder: URLs in `data/thumbs.json` (`python3 tools/thumbnails.py`); die Bilder selbst werden nicht gespeichert, sondern direkt vom Anbieter eingebunden.
 - Website: statisch erzeugt nach `docs/` (`python3 tools/build_site.py`), lokal ansehen mit `python3 -m http.server --directory docs`.
 - Alles neu erzeugen: `python3 tools/erstelle_ordner.py`

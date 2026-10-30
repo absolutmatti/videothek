@@ -23,6 +23,8 @@ Aufruf:
 from __future__ import annotations
 
 import html
+import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -111,9 +113,23 @@ ul.links li{
 }
 ul.links li:hover{border-color:var(--accent);background:var(--card-hover)}
 ul.links a{
-  display:flex;align-items:center;gap:.8rem;padding:.68rem .95rem;
+  display:flex;align-items:center;gap:.85rem;padding:.6rem .8rem;
   color:var(--text);font-size:.93rem
 }
+/* Vorschaubild links, Titel rechts; Bild kommt direkt vom Anbieter */
+.thumb{
+  flex:none;width:132px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;
+  background:#0a0c12;border:1px solid var(--line);position:relative;display:block
+}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block;background:#0a0c12}
+.thumb.noimg img{display:none}
+.thumb.noimg::after{
+  content:"🎬";position:absolute;inset:0;display:grid;place-items:center;
+  font-size:1.15rem;opacity:.5
+}
+ul.links .tx{display:flex;flex-direction:column;gap:.1rem;min-width:0}
+ul.links .meta{color:var(--muted);font-size:.74rem}
+body.no-thumbs .thumb{display:none}
 ul.links a:hover{text-decoration:none}
 ul.links .t{overflow-wrap:anywhere}
 ul.links .go{
@@ -159,6 +175,9 @@ footer p{margin:.25rem 0}
 @media(max-width:560px){
   .controls{top:56px}
   .card .name{font-size:.9rem}
+  .thumb{width:96px}
+  ul.links a{gap:.65rem;padding:.5rem .6rem}
+  ul.links .meta{display:none}
 }
 """
 
@@ -179,6 +198,35 @@ JS = """
       if (input) input.focus();
     });
   }
+
+  // Thumbnails an/aus (Auswahl merken)
+  var TK = 'videothekThumbs';
+  var thumbBtn = document.querySelector('[data-thumbs]');
+  var applyThumbs = function (on) {
+    document.body.classList.toggle('no-thumbs', !on);
+    if (thumbBtn) {
+      thumbBtn.setAttribute('aria-pressed', String(on));
+      thumbBtn.textContent = on ? 'Thumbnails: an' : 'Thumbnails: aus';
+    }
+  };
+  var thumbsOn = true;
+  try { thumbsOn = localStorage.getItem(TK) !== '0'; } catch (e) {}
+  applyThumbs(thumbsOn);
+  if (thumbBtn) {
+    thumbBtn.addEventListener('click', function () {
+      thumbsOn = !thumbsOn;
+      try { localStorage.setItem(TK, thumbsOn ? '1' : '0'); } catch (e) {}
+      applyThumbs(thumbsOn);
+    });
+  }
+  // Fehlgeschlagene Bilder -> Platzhalter statt kaputtem Icon
+  document.addEventListener('error', function (e) {
+    var img = e.target;
+    if (img && img.tagName === 'IMG' && img.parentElement &&
+        img.parentElement.classList.contains('thumb')) {
+      img.parentElement.classList.add('noimg');
+    }
+  }, true);
 
   // Suche
   var input = document.querySelector('[data-search]');
@@ -347,20 +395,57 @@ def build_index(entries, total: int) -> str:
     return page(f"{SITE_TITLE} – Links nach Darstellerin", body, "", SITE_DESC)
 
 
-def build_person(entry) -> str:
+def load_thumbs() -> dict[str, str]:
+    """Liest die von tools/thumbnails.py ermittelten Vorschaubild-URLs."""
+    path = ROOT / "data" / "thumbs.json"
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return {
+        k: v
+        for k, v in data.items()
+        if isinstance(v, str) and v.startswith(("http://", "https://", "/"))
+    }
+
+
+def host_of(url: str) -> str:
+    match = re.match(r"https?://([^/]+)/?", url)
+    return (match.group(1) if match else "").removeprefix("www.")
+
+
+def link_item(title: str, url: str, thumbs: dict[str, str]) -> str:
+    """Ein Listeneintrag mit Vorschaubild (falls bekannt) und Titel."""
+    thumb = thumbs.get(url)
+    if thumb:
+        img = (
+            f'<img src="{esc(thumb)}" alt="" loading="lazy" decoding="async" '
+            f'referrerpolicy="no-referrer" width="132" height="74">'
+        )
+        thumb_html = f'<span class="thumb">{img}</span>'
+    else:
+        thumb_html = '<span class="thumb noimg"></span>'
+    return (
+        f'<li data-term="{esc((title + " " + url).casefold())}">'
+        f'<a href="{esc(url)}" target="_blank" rel="noopener noreferrer nofollow">'
+        f"{thumb_html}"
+        f'<span class="tx"><span class="t">{esc(title)}</span>'
+        f'<span class="meta">{esc(host_of(url))}</span></span>'
+        f'<span class="go">öffnen</span></a></li>'
+    )
+
+
+def build_person(entry, thumbs: dict[str, str] | None = None) -> str:
     name = entry["name"]
     items = sorted(
         ((title, url) for url, title in entry["links"].items()),
         key=lambda t: (eo.normalize(t[0]), t[1]),
     )
-    lis = []
-    for title, url in items:
-        lis.append(
-            f'<li data-term="{esc((title + " " + url).casefold())}">'
-            f'<a href="{esc(url)}" target="_blank" rel="noopener noreferrer nofollow">'
-            f'<span class="t">{esc(title)}</span>'
-            f'<span class="go">öffnen</span></a></li>'
-        )
+    thumbs = thumbs or {}
+    with_thumb = sum(1 for _, url in items if url in thumbs)
+    lis = [link_item(title, url, thumbs) for title, url in items]
 
     body = f"""<header class="top">
   <div class="wrap">
@@ -373,11 +458,13 @@ def build_person(entry) -> str:
     <h1>{esc(name)}</h1>
     <div class="stats">
       <span class="pill"><b>{len(items)}</b> Links</span>
+      <span class="pill"><b>{with_thumb}</b> mit Vorschaubild</span>
     </div>
   </section>
 
   <div class="controls">
     <input type="search" data-search placeholder="Titel durchsuchen …" aria-label="Titel durchsuchen">
+    <button class="btn" type="button" data-thumbs aria-pressed="true">Thumbnails: an</button>
   </div>
 
   <ul class="links">
@@ -389,8 +476,9 @@ def build_person(entry) -> str:
     return page(f"{name} – {SITE_TITLE}", body, "../../")
 
 
-def build_standalone(entries, total: int) -> str:
+def build_standalone(entries, total: int, thumbs: dict[str, str] | None = None) -> str:
     """Alles in einer einzigen HTML-Datei – laeuft auch ohne Webserver."""
+    thumbs = thumbs or {}
     rows = sorted(entries.values(), key=lambda e: e["name"].casefold())
     sections = []
     nav = []
@@ -403,13 +491,7 @@ def build_standalone(entries, total: int) -> str:
             ((title, url) for url, title in entry["links"].items()),
             key=lambda t: (eo.normalize(t[0]), t[1]),
         )
-        lis = "".join(
-            f'<li data-term="{esc((title + " " + url).casefold())}">'
-            f'<a href="{esc(url)}" target="_blank" rel="noopener noreferrer nofollow">'
-            f'<span class="t">{esc(title)}</span>'
-            f'<span class="go">öffnen</span></a></li>'
-            for title, url in items
-        )
+        lis = "".join(link_item(title, url, thumbs) for title, url in items)
         sections.append(
             f'<section class="grp" id="{anchor}" data-term="{esc(name.casefold())}">'
             f'<h2>{esc(name)} <span class="n">{count}</span></h2>'
@@ -430,6 +512,7 @@ def build_standalone(entries, total: int) -> str:
   </section>
   <div class="controls">
     <input type="search" data-search placeholder="Darstellerin oder Titel suchen …" aria-label="Suchen">
+    <button class="btn" type="button" data-thumbs aria-pressed="true">Thumbnails: an</button>
   </div>
   <div class="chips">{''.join(nav)}</div>
   {''.join(sections)}
@@ -446,6 +529,7 @@ def main() -> int:
         return 1
 
     entries = eo.parse(sources)
+    thumbs = load_thumbs()
     total_unique = len({u for e in entries.values() for u in e["links"]})
     total = sum(len(e["links"]) for e in entries.values())
 
@@ -453,6 +537,14 @@ def main() -> int:
         shutil.rmtree(OUT)
     (OUT / "assets").mkdir(parents=True)
     (OUT / "p").mkdir()
+
+    if not thumbs:
+        print(
+            "Hinweis: data/thumbs.json ist leer – Seiten werden ohne "
+            "Vorschaubilder gebaut (Platzhalter). Fuellen mit: "
+            "python3 tools/thumbnails.py",
+            file=sys.stderr,
+        )
 
     (OUT / "assets" / "style.css").write_text(CSS.strip() + "\n", encoding="utf-8")
     (OUT / "assets" / "app.js").write_text(JS.strip() + "\n", encoding="utf-8")
@@ -465,15 +557,18 @@ def main() -> int:
     for entry in entries.values():
         folder = OUT / "p" / eo.slugify(entry["name"])
         folder.mkdir(parents=True, exist_ok=True)
-        (folder / "index.html").write_text(build_person(entry), encoding="utf-8")
+        (folder / "index.html").write_text(
+            build_person(entry, thumbs), encoding="utf-8"
+        )
 
     (OUT / "videothek.html").write_text(
-        build_standalone(entries, total), encoding="utf-8"
+        build_standalone(entries, total, thumbs), encoding="utf-8"
     )
 
     print(
         f"{len(entries)} Darstellerinnen-Seiten erzeugt "
-        f"({total} Zuordnungen, {total_unique} eindeutige Links) -> {OUT}"
+        f"({total} Zuordnungen, {total_unique} eindeutige Links, "
+        f"{len(thumbs)} Vorschaubilder) -> {OUT}"
     )
     return 0
 
