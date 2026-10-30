@@ -147,7 +147,7 @@ def save_cache(thumbs: dict[str, str]) -> None:
 
 
 def collect_urls() -> list[str]:
-    sources = sorted(eo.SOURCE_DIR.glob("*.md"))
+    sources = eo.source_files()
     if not sources:
         return []
     entries = eo.parse(sources)

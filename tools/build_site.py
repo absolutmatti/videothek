@@ -523,9 +523,9 @@ def build_standalone(entries, total: int, thumbs: dict[str, str] | None = None) 
 
 
 def main() -> int:
-    sources = sorted(eo.SOURCE_DIR.glob("*.md"))
+    sources = eo.source_files()
     if not sources:
-        print(f"Keine Quelldateien in {eo.SOURCE_DIR}", file=sys.stderr)
+        print("Keine Quelldateien gefunden.", file=sys.stderr)
         return 1
 
     entries = eo.parse(sources)

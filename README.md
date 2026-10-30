@@ -1,9 +1,10 @@
 # Videothek
 
-188 Darstellerinnen-Ordner mit insgesamt 1340 Links (ohne Doppelzaehlungen innerhalb eines Ordners).
+192 Darstellerinnen-Ordner mit insgesamt 1477 Links (ohne Doppelzaehlungen innerhalb eines Ordners).
 
 | Darstellerin | Links |
 | --- | ---: |
+| [Adriana Chechik](Adriana%20Chechik/README.md) | 33 |
 | [Aiden Ashley](Aiden%20Ashley/README.md) | 1 |
 | [Alexa Payne](Alexa%20Payne/README.md) | 26 |
 | [Alexis Fawx](Alexis%20Fawx/README.md) | 1 |
@@ -34,6 +35,7 @@
 | [Athena Heart](Athena%20Heart/README.md) | 1 |
 | [Aubree Blaire](Aubree%20Blaire/README.md) | 1 |
 | [Ava Addams](Ava%20Addams/README.md) | 20 |
+| [Aviana Violet](Aviana%20Violet/README.md) | 18 |
 | [Bella Rolland](Bella%20Rolland/README.md) | 1 |
 | [Bianca Bangs](Bianca%20Bangs/README.md) | 2 |
 | [Blake Blossom](Blake%20Blossom/README.md) | 47 |
@@ -68,6 +70,7 @@
 | [Fiona Frost](Fiona%20Frost/README.md) | 1 |
 | [Freya Von Doom](Freya%20Von%20Doom/README.md) | 1 |
 | [Gabriela Lopez](Gabriela%20Lopez/README.md) | 1 |
+| [Gaby Ortega](Gaby%20Ortega/README.md) | 17 |
 | [Gal Ritchie](Gal%20Ritchie/README.md) | 1 |
 | [Gigi Sweets](Gigi%20Sweets/README.md) | 1 |
 | [Gina Valentina](Gina%20Valentina/README.md) | 1 |
@@ -113,13 +116,14 @@
 | [Lily Jordan](Lily%20Jordan/README.md) | 5 |
 | [Lily Veroni](Lily%20Veroni/README.md) | 1 |
 | [Little Puck](Little%20Puck/README.md) | 1 |
-| [Lola Pearl](Lola%20Pearl/README.md) | 1 |
+| [Lola Pearl](Lola%20Pearl/README.md) | 14 |
 | [Lucky Anne](Lucky%20Anne/README.md) | 13 |
 | [Lulu Chu](Lulu%20Chu/README.md) | 1 |
 | [Luna Baby](Luna%20Baby/README.md) | 1 |
 | [Macey Jade](Macey%20Jade/README.md) | 7 |
 | [Mandy Rhea](Mandy%20Rhea/README.md) | 26 |
 | [Mandy Waters](Mandy%20Waters/README.md) | 36 |
+| [Martina Smeraldi](Martina%20Smeraldi/README.md) | 35 |
 | [McKenzie Lee](McKenzie%20Lee/README.md) | 1 |
 | [Mia James](Mia%20James/README.md) | 1 |
 | [Mia Moore](Mia%20Moore/README.md) | 1 |
@@ -131,7 +135,7 @@
 | [Misty Meaner](Misty%20Meaner/README.md) | 1 |
 | [Mj Fresh](Mj%20Fresh/README.md) | 1 |
 | [Molly Little](Molly%20Little/README.md) | 3 |
-| [Monica Minx](Monica%20Minx/README.md) | 6 |
+| [Monica Minx](Monica%20Minx/README.md) | 13 |
 | [Myra Moans](Myra%20Moans/README.md) | 1 |
 | [Natalie Brooks](Natalie%20Brooks/README.md) | 18 |
 | [Nia Bleu](Nia%20Bleu/README.md) | 1 |
@@ -177,7 +181,7 @@
 | [Sophia Locke](Sophia%20Locke/README.md) | 1 |
 | [Taylor Gunner](Taylor%20Gunner/README.md) | 1 |
 | [The Official Egypt](The%20Official%20Egypt/README.md) | 5 |
-| [Tia Cyrus](Tia%20Cyrus/README.md) | 1 |
+| [Tia Cyrus](Tia%20Cyrus/README.md) | 15 |
 | [Tommy King](Tommy%20King/README.md) | 1 |
 | [Trinity St Clair](Trinity%20St%20Clair/README.md) | 1 |
 | [Tru Kait](Tru%20Kait/README.md) | 14 |
@@ -199,7 +203,7 @@
 - Eintraege mit mehreren Darstellerinnen (`Name & Name - Titel`) liegen in **jedem** betroffenen Ordner.
 - Darstellerinnen-Profilseiten (`.../star-name/<name>/`) werden bewusst nicht aufgenommen.
 - Die 40 Darstellerinnen mit eigener Ueberschrift in der ersten Quelldatei haben viele Links; die uebrigen Ordner enthalten oft nur 1–2 Titel, in denen die Darstellerin als Co-Star auftaucht.
-- Quelldateien liegen unveraendert in `_Ursprungsdaten/`.
+- Quelldateien liegen in `_Ursprungsdaten/`; zusaetzlich wird jede `*.md` im Wurzelverzeichnis gelesen (ausser `README.md`), damit neue Lesezeichen einfach oben abgelegt werden koennen.
 - Live: https://absolutmatti.github.io/videothek/
 - Vorschaubilder: URLs in `data/thumbs.json` (`python3 tools/thumbnails.py`); die Bilder selbst werden nicht gespeichert, sondern direkt vom Anbieter eingebunden.
 - Website: statisch erzeugt nach `docs/` (`python3 tools/build_site.py`), lokal ansehen mit `python3 -m http.server --directory docs`.
