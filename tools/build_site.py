@@ -22,6 +22,7 @@ Aufruf:
 
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import re
@@ -349,6 +350,22 @@ def esc(text: str) -> str:
     return html.escape(text, quote=True)
 
 
+# Versionskennung fuer CSS/JS: erzwingt nach jedem Build einen frischen Download,
+# damit Browser nach Aenderungen nicht die alte Datei aus dem Cache zeigen.
+ASSET_VERSIONS: dict[str, str] = {}
+
+
+def asset_version(name: str) -> str:
+    return ASSET_VERSIONS.get(name, "0")
+
+
+def version_assets() -> None:
+    """Hasht die ausgelieferten CSS/JS-Inhalte und merkt sich die Kennung."""
+    for name in ("style.css", "app.js"):
+        data = (CSS if name.endswith(".css") else JS).encode("utf-8")
+        ASSET_VERSIONS[name] = hashlib.sha1(data).hexdigest()[:8]
+
+
 def page(title: str, body: str, root: str, description: str = SITE_DESC) -> str:
     return f"""<!DOCTYPE html>
 <html lang="de">
@@ -360,13 +377,13 @@ def page(title: str, body: str, root: str, description: str = SITE_DESC) -> str:
 <meta name="rating" content="adult">
 <meta name="description" content="{esc(description)}">
 <title>{esc(title)}</title>
-<link rel="stylesheet" href="{root}assets/style.css">
+<link rel="stylesheet" href="{root}assets/style.css?v={asset_version("style.css")}">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
 </head>
 <body>
 {GATE}
 {body}
-<script src="{root}assets/app.js" defer></script>
+<script src="{root}assets/app.js?v={asset_version("app.js")}" defer></script>
 </body>
 </html>
 """
@@ -579,6 +596,8 @@ def main() -> int:
             "python3 tools/thumbnails.py",
             file=sys.stderr,
         )
+
+    version_assets()
 
     (OUT / "assets" / "style.css").write_text(CSS.strip() + "\n", encoding="utf-8")
     (OUT / "assets" / "app.js").write_text(JS.strip() + "\n", encoding="utf-8")
