@@ -6,6 +6,7 @@ Erzeugt:
   docs/p/<slug>/index.html     eine Seite pro Darstellerin
   docs/assets/style.css        gemeinsames Stylesheet
   docs/assets/app.js           Suche, Sortierung, Altersabfrage
+  docs/videothek.html          alles in einer Datei (offline nutzbar)
   docs/robots.txt              kein Indexieren durch Suchmaschinen
   docs/.nojekyll               Dateien unveraendert ausliefern
 
@@ -118,6 +119,18 @@ ul.links .go{
 }
 ul.links li:hover .go{color:var(--accent);border-color:var(--accent)}
 .empty{color:var(--muted);padding:2rem 0 4rem}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem;margin:0 0 2rem}
+.chip{
+  font-size:.78rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;
+  padding:.2rem .6rem;background:var(--bg-soft)
+}
+.chip b{color:var(--text);font-weight:600}
+.chip:hover{color:var(--accent);border-color:var(--accent);text-decoration:none}
+section.grp{margin-bottom:2rem;scroll-margin-top:70px}
+section.grp[hidden]{display:none}
+section.grp h2{font-size:1.05rem;margin:0 0 .6rem;display:flex;align-items:center;gap:.55rem}
+section.grp h2 .n{font-size:.75rem;color:var(--muted);background:var(--card);
+  border:1px solid var(--line);border-radius:999px;padding:.05rem .45rem;font-weight:500}
 
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;padding:1.6rem 0 2.4rem}
 footer p{margin:.25rem 0}
@@ -187,6 +200,24 @@ JS = """
         input.focus();
         input.select();
       }
+    });
+  }
+
+  // Ein-Datei-Variante: Gruppen ausblenden, wenn nichts passt
+  var groups = Array.prototype.slice.call(document.querySelectorAll('section.grp'));
+  if (input && groups.length) {
+    input.addEventListener('input', function () {
+      var q = input.value.trim().toLowerCase();
+      groups.forEach(function (g) {
+        var nameHit = !q || g.getAttribute('data-term').indexOf(q) !== -1;
+        var hits = 0;
+        Array.prototype.slice.call(g.querySelectorAll('li[data-term]')).forEach(function (li) {
+          var hit = nameHit || li.getAttribute('data-term').indexOf(q) !== -1;
+          li.hidden = !hit;
+          if (hit) hits++;
+        });
+        g.hidden = !nameHit && hits === 0;
+      });
     });
   }
 
@@ -355,6 +386,56 @@ def build_person(entry) -> str:
     return page(f"{name} – {SITE_TITLE}", body, "../../")
 
 
+def build_standalone(entries, total: int) -> str:
+    """Alles in einer einzigen HTML-Datei – laeuft auch ohne Webserver."""
+    rows = sorted(entries.values(), key=lambda e: e["name"].casefold())
+    sections = []
+    nav = []
+    for entry in rows:
+        name = entry["name"]
+        anchor = eo.slugify(name)
+        count = len(entry["links"])
+        nav.append(f'<a class="chip" href="#{anchor}">{esc(name)} <b>{count}</b></a>')
+        items = sorted(
+            ((title, url) for url, title in entry["links"].items()),
+            key=lambda t: (eo.normalize(t[0]), t[1]),
+        )
+        lis = "".join(
+            f'<li data-term="{esc((title + " " + url).casefold())}">'
+            f'<a href="{esc(url)}" target="_blank" rel="noopener noreferrer nofollow">'
+            f'<span class="t">{esc(title)}</span>'
+            f'<span class="go">öffnen</span></a></li>'
+            for title, url in items
+        )
+        sections.append(
+            f'<section class="grp" id="{anchor}" data-term="{esc(name.casefold())}">'
+            f'<h2>{esc(name)} <span class="n">{count}</span></h2>'
+            f'<ul class="links">{lis}</ul></section>'
+        )
+
+    body = f"""<header class="top">
+  <div class="wrap">
+    <span class="brand">Video<span>thek</span></span>
+    <span class="count">{len(rows)} Darstellerinnen · {total} Links</span>
+  </div>
+</header>
+<main class="wrap">
+  <section class="hero">
+    <h1>Videothek</h1>
+    <p>Alles in einer Datei – {len(rows)} Darstellerinnen, {total} Links.
+       Die Suche filtert Darstellerinnen und Titel gleichzeitig.</p>
+  </section>
+  <div class="controls">
+    <input type="search" data-search placeholder="Darstellerin oder Titel suchen …" aria-label="Suchen">
+  </div>
+  <div class="chips">{''.join(nav)}</div>
+  {''.join(sections)}
+  <p class="empty" data-empty hidden>Keine Treffer.</p>
+</main>
+{footer(total)}"""
+    return page(f"{SITE_TITLE} – alle Links", body, "")
+
+
 def main() -> int:
     sources = sorted(eo.SOURCE_DIR.glob("*.md"))
     if not sources:
@@ -382,6 +463,10 @@ def main() -> int:
         folder = OUT / "p" / eo.slugify(entry["name"])
         folder.mkdir(parents=True, exist_ok=True)
         (folder / "index.html").write_text(build_person(entry), encoding="utf-8")
+
+    (OUT / "videothek.html").write_text(
+        build_standalone(entries, total), encoding="utf-8"
+    )
 
     print(
         f"{len(entries)} Darstellerinnen-Seiten erzeugt "

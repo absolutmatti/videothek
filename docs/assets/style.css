@@ -83,6 +83,18 @@ ul.links .go{
 }
 ul.links li:hover .go{color:var(--accent);border-color:var(--accent)}
 .empty{color:var(--muted);padding:2rem 0 4rem}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem;margin:0 0 2rem}
+.chip{
+  font-size:.78rem;color:var(--muted);border:1px solid var(--line);border-radius:999px;
+  padding:.2rem .6rem;background:var(--bg-soft)
+}
+.chip b{color:var(--text);font-weight:600}
+.chip:hover{color:var(--accent);border-color:var(--accent);text-decoration:none}
+section.grp{margin-bottom:2rem;scroll-margin-top:70px}
+section.grp[hidden]{display:none}
+section.grp h2{font-size:1.05rem;margin:0 0 .6rem;display:flex;align-items:center;gap:.55rem}
+section.grp h2 .n{font-size:.75rem;color:var(--muted);background:var(--card);
+  border:1px solid var(--line);border-radius:999px;padding:.05rem .45rem;font-weight:500}
 
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;padding:1.6rem 0 2.4rem}
 footer p{margin:.25rem 0}

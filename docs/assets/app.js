@@ -41,6 +41,24 @@
     });
   }
 
+  // Ein-Datei-Variante: Gruppen ausblenden, wenn nichts passt
+  var groups = Array.prototype.slice.call(document.querySelectorAll('section.grp'));
+  if (input && groups.length) {
+    input.addEventListener('input', function () {
+      var q = input.value.trim().toLowerCase();
+      groups.forEach(function (g) {
+        var nameHit = !q || g.getAttribute('data-term').indexOf(q) !== -1;
+        var hits = 0;
+        Array.prototype.slice.call(g.querySelectorAll('li[data-term]')).forEach(function (li) {
+          var hit = nameHit || li.getAttribute('data-term').indexOf(q) !== -1;
+          li.hidden = !hit;
+          if (hit) hits++;
+        });
+        g.hidden = !nameHit && hits === 0;
+      });
+    });
+  }
+
   // Sortierung (nur Startseite): A–Z oder meiste Links
   var grid = document.querySelector('[data-grid]');
   var sortBtn = document.querySelector('[data-sort]');
