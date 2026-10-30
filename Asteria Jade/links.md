@@ -7,7 +7,6 @@ https://www.porn00.com/video/asteria-jade-babe-not-interested-in-paintings/
 https://www.porn00.com/video/asteria-jade-brunette-with-electric-sexual-energy/
 https://www.porn00.com/video/asteria-jade-co-workers-turns-office-into-bedroom/
 https://www.porn00.com/video/asteria-jade-dad-fucks-her-favorite-pornstar-5muii/
-https://www.porn00.com/star-name/desiree-dulce/
 https://www.porn00.com/video/asteria-jade-the-official-egypt-dirty-stepfamily-threesome-with-a-principal/
 https://www.porn00.com/video/asteria-jade-freeuse-chick-pounded/
 https://www.porn00.com/video/asteria-jade-fun-game-with-horny-stepmom/

@@ -1,6 +1,6 @@
 # Asteria Jade
 
-**29 Links**
+**28 Links**
 
 ## Links
 
@@ -13,7 +13,6 @@
 - [Brunette With Electric Sexual Energy](https://www.porn00.com/video/asteria-jade-brunette-with-electric-sexual-energy/)
 - [Co Workers Turns Office Into Bedroom](https://www.porn00.com/video/asteria-jade-co-workers-turns-office-into-bedroom/)
 - [Dad Fucks Her Favorite Pornstar](https://www.porn00.com/video/asteria-jade-dad-fucks-her-favorite-pornstar-5muii/)
-- [Desiree Dulce's HD Porn Videos](https://www.porn00.com/star-name/desiree-dulce/)
 - [Dirty Stepfamily Threesome With A Principal](https://www.porn00.com/video/asteria-jade-the-official-egypt-dirty-stepfamily-threesome-with-a-principal/)
 - [Freeuse Chick Pounded](https://www.porn00.com/video/asteria-jade-freeuse-chick-pounded/)
 - [Fun Game With Horny Stepmom](https://www.porn00.com/video/asteria-jade-fun-game-with-horny-stepmom/)
