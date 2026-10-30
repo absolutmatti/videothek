@@ -200,4 +200,5 @@
 - Darstellerinnen-Profilseiten (`.../star-name/<name>/`) werden bewusst nicht aufgenommen.
 - Die 40 Darstellerinnen mit eigener Ueberschrift in der ersten Quelldatei haben viele Links; die uebrigen Ordner enthalten oft nur 1–2 Titel, in denen die Darstellerin als Co-Star auftaucht.
 - Quelldateien liegen unveraendert in `_Ursprungsdaten/`.
+- Website: statisch erzeugt nach `docs/` (`python3 tools/build_site.py`), lokal ansehen mit `python3 -m http.server --directory docs`.
 - Alles neu erzeugen: `python3 tools/erstelle_ordner.py`

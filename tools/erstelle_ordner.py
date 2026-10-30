@@ -55,6 +55,8 @@ WORD_FIX = {
     "ts": "TS", "hd": "HD", "creampie": "Creampie",
 }
 APOSTROPHE_RE = re.compile(r"\s+(s|t|d|ll|re|ve|m)\b(?=\s|$)")
+# Beim Kopieren mitgenommene Metadaten: "59:22 84% 4 years ago 52 268"
+METADATA_RE = re.compile(r"\s+\d{1,2}:\d{2}\s+\d+\s*%.*$")
 
 NOISE = {"---", "about:blank", "neuer tab", "[ordnername]", "ordnername"}
 # Woerter, die nie Teil eines Namens sind (Schutz gegen Fehl-Treffer)
@@ -94,9 +96,15 @@ def is_person_name(name: str) -> bool:
     return all(w[:1].isupper() for w in words)
 
 
+def clean_title(title: str) -> str:
+    """Entfernt Website-Zusatz und mitkopierte Metadaten aus einem Titel."""
+    title = SITE_SUFFIX_RE.sub("", title.strip()).strip()
+    return METADATA_RE.sub("", title).strip() or title
+
+
 def split_cast(title: str) -> tuple[list[str], str]:
     """Zerlegt einen Markdown-Linktitel in (Darstellerinnen, Filmtitel)."""
-    title = SITE_SUFFIX_RE.sub("", title.strip()).strip()
+    title = clean_title(title)
     parts = CAST_TITLE_SPLIT_RE.split(title, maxsplit=1)
     if len(parts) == 2:
         cast_raw, movie = parts
@@ -152,7 +160,7 @@ def parse_file(path: Path, entries: "OrderedDict[str, dict]") -> None:
         if not name:
             return
         key = register(name)
-        entries[key]["links"].setdefault(url, title.strip() or url)
+        entries[key]["links"].setdefault(url, clean_title(title) or url)
 
     for raw_line in path.read_text(encoding="utf-8-sig").splitlines():
         line = raw_line.strip()
@@ -252,6 +260,9 @@ def write_root_readme(entries) -> None:
         "Quelldatei haben viele Links; die uebrigen Ordner enthalten oft nur "
         "1–2 Titel, in denen die Darstellerin als Co-Star auftaucht.",
         "- Quelldateien liegen unveraendert in `_Ursprungsdaten/`.",
+        "- Website: statisch erzeugt nach `docs/` "
+        "(`python3 tools/build_site.py`), lokal ansehen mit "
+        "`python3 -m http.server --directory docs`.",
         "- Alles neu erzeugen: `python3 tools/erstelle_ordner.py`",
         "",
     ]
