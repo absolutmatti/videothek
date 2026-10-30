@@ -15,6 +15,35 @@
     });
   }
 
+  // Thumbnails an/aus (Auswahl merken)
+  var TK = 'videothekThumbs';
+  var thumbBtn = document.querySelector('[data-thumbs]');
+  var applyThumbs = function (on) {
+    document.body.classList.toggle('no-thumbs', !on);
+    if (thumbBtn) {
+      thumbBtn.setAttribute('aria-pressed', String(on));
+      thumbBtn.textContent = on ? 'Thumbnails: an' : 'Thumbnails: aus';
+    }
+  };
+  var thumbsOn = true;
+  try { thumbsOn = localStorage.getItem(TK) !== '0'; } catch (e) {}
+  applyThumbs(thumbsOn);
+  if (thumbBtn) {
+    thumbBtn.addEventListener('click', function () {
+      thumbsOn = !thumbsOn;
+      try { localStorage.setItem(TK, thumbsOn ? '1' : '0'); } catch (e) {}
+      applyThumbs(thumbsOn);
+    });
+  }
+  // Fehlgeschlagene Bilder -> Platzhalter statt kaputtem Icon
+  document.addEventListener('error', function (e) {
+    var img = e.target;
+    if (img && img.tagName === 'IMG' && img.parentElement &&
+        img.parentElement.classList.contains('thumb')) {
+      img.parentElement.classList.add('noimg');
+    }
+  }, true);
+
   // Suche
   var input = document.querySelector('[data-search]');
   var items = Array.prototype.slice.call(document.querySelectorAll('[data-term]'));

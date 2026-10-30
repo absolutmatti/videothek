@@ -34,6 +34,20 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Vorschaubilder: URLs werden geholt und zwischengespeichert. Schlaegt das
+      # fehl (z. B. Blockade durch den Anbieter), wird die Seite trotzdem mit
+      # Platzhaltern gebaut - der Deploy darf davon nicht abhaengen.
+      - name: Thumbnail-Cache wiederherstellen
+        uses: actions/cache@v4
+        with:
+          path: data/thumbs.json
+          key: thumbs-${{ hashFiles('_Ursprungsdaten/*.md') }}
+          restore-keys: thumbs-
+
+      - name: Vorschaubilder ermitteln
+        continue-on-error: true
+        run: python3 tools/thumbnails.py --workers 8 --max-seconds 900
+
       - name: Website erzeugen
         run: python3 tools/build_site.py
 
